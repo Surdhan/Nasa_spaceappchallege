@@ -1,0 +1,59 @@
+import folium
+from geopy.geocoders import Nominatim
+import webbrowser
+from folium.plugins import FloatImage
+from folium import IFrame
+
+def get_coordinates(location_name):
+    geolocator = Nominatim(user_agent="geoapi")
+    location = geolocator.geocode(location_name)
+    return (location.latitude, location.longitude)
+
+def show_aerial_view(location_name, zoom_level=5, water_tank_count=0):
+    # Get coordinates of the location
+    latitude, longitude = get_coordinates(location_name)
+
+    # Create a folium map centered around the given latitude and longitude
+    map_object = folium.Map(location=[latitude, longitude], zoom_start=zoom_level, control_scale=True)
+
+    # Add a marker for the location
+    folium.Marker([latitude, longitude], popup=f"<b>{location_name}</b>").add_to(map_object)
+
+    # Add water tank count in a box format
+    water_tank_popup_content = f"<div style='width: 150px; height: 80px; background-color: rgba(255, 255, 255, 0.7); " \
+                               f"border-radius: 10px; text-align: center; padding: 10px;'>" \
+                               f"<b>Water Tank Count</b><br>{water_tank_count} litres</div>"
+    folium.Marker([latitude, longitude], popup=water_tank_popup_content).add_to(map_object)
+
+    # Add a button to change the location
+    location_change_button = '<button onclick="location.reload();">Change Location</button>'
+    location_change_popup = folium.Popup(IFrame(location_change_button, width=200, height=60), max_width=300)
+    folium.Marker([latitude, longitude], popup=location_change_popup).add_to(map_object)
+
+    # Add an attractive framework
+    framework_html = '''
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000;
+                padding: 20px; background-color: rgba(255, 255, 255, 0.7); border-radius: 10px; box-shadow: 0px 0px 10px 0px #888888;">
+        <h2 style="text-align: center; color: #333;">Water Tank Monitoring</h2>
+        <p style="text-align: center; color: #555;">Location: {}</p>
+        <p style="text-align: center; color: #555;">Water Tank Count: {} litres</p>
+    </div>
+    '''.format(location_name, water_tank_count)
+    framework_image = FloatImage(framework_html, bottom=0, left=0)
+
+    map_object.add_child(framework_image)
+
+    # Save the map as an HTML file
+    map_object.save("aerial_view_india.html")
+
+    # Open the map in the default web browser
+    webbrowser.open("aerial_view_india.html")
+
+if __name__ == "__main__":
+    # Set the target location to India
+    target_location = 'India'
+
+    # Set the initial water tank count
+    initial_water_tank_count = 5000  # Replace this with the actual water tank count
+
+    show_aerial_view(target_location, water_tank_count=initial_water_tank_count)
