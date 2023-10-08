@@ -1,0 +1,78 @@
+import random
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+
+class WaterConservationGame(BoxLayout):
+
+    def _init_(self, **kwargs):
+        super()._init_(**kwargs)
+
+        self.word_list = ["drought", "rainwater", "conserve", "irrigation", "watershed"]
+        self.random_word = random.choice(self.word_list)
+        self.guesses = ""
+        self.chances = 5
+
+        self.orientation = "vertical"
+        self.padding = 10
+        self.spacing = 10
+
+        self.welcome_label = Label(text="Welcome to the Water Conservation Game!")
+        self.instruction_label = Label(text="Guess the word related to water conservation.")
+        self.chances_label = Label(text=f"Chances left: {self.chances}")
+
+        self.word_label = Label(text=self.display_word())
+        self.guess_input = TextInput(hint_text="Enter a letter or the entire word")
+        self.guess_button = Button(text="Guess", on_press=self.check_guess)
+
+        self.add_widget(self.welcome_label)
+        self.add_widget(self.instruction_label)
+        self.add_widget(self.chances_label)
+        self.add_widget(self.word_label)
+        self.add_widget(self.guess_input)
+        self.add_widget(self.guess_button)
+
+    def display_word(self):
+        display_word = ""
+        for letter in self.random_word:
+            if letter in self.guesses:
+                display_word += letter
+            else:
+                display_word += "_"
+        return display_word
+
+    def check_guess(self, instance):
+        guess = self.guess_input.text.lower()
+        if len(guess) == 1 and guess.isalpha():
+            if guess in self.random_word:
+                self.guesses += guess
+                self.word_label.text = self.display_word()
+                if "_" not in self.word_label.text:
+                    self.word_label.text = f"Congratulations! You guessed the word: {self.random_word}"
+                    self.guess_input.disabled = True
+            else:
+                self.chances -= 1
+        elif len(guess) == len(self.random_word) and guess.isalpha():
+            if guess == self.random_word:
+                self.word_label.text = f"Congratulations! You guessed the word: {self.random_word}"
+                self.guess_input.disabled = True
+            else:
+                self.chances -= 1
+        else:
+            self.word_label.text = "Invalid input. Please enter a single letter or the entire word."
+
+        self.chances_label.text = f"Chances left: {self.chances}"
+
+        if self.chances == 0:
+            self.word_label.text = f"Sorry, you've run out of chances. The word was: {self.random_word}"
+            self.guess_input.disabled = True
+
+class WaterConservationApp(App):
+
+    def build(self):
+        return WaterConservationGame()
+
+if _name_ == '_main_':
+    WaterConservationApp().run()
